@@ -1,7 +1,20 @@
 var express = require("express");
+var cookieParser = require("cookie-parser");
+
 var app = express();
+app.use(cookieParser());
+
+const bodyParser = require("body-parser");
+app.use(bodyParser.urlencoded({extended: true}));
+
 var PORT = process.env.PORT || 8080;
 
+app.set("view engine", "ejs");
+
+const urlDatabase = {
+  "b2xVn2": "http://www.lighthouselabs.ca",
+  "9sm5xK": "http://www.google.com"
+};
 
 const users = {
   "userRandomID": {
@@ -14,35 +27,42 @@ const users = {
     email: "user2@example.com",
     password: "dishwasher-funk"
   }
-}
-
-
-// ⬇ Needs Global Scope
-function generateRandomString() {
-
-}
-
-// Allows us to access POST request params
-const bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({extended: true}));
-
-app.set("view engine", "ejs");
-
-var urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
 };
 
-app.get("/", (req, res) => {
-  res.end("Hello!");
-});
+// ⬇ Used for URLDATABASE & USERID
+function generateRandomString() {
+  var text = "";
+  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
+  for (var i = 0; i < 6; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
+}
+// generateRandomString();
+
+
+
+// GET REQUESTS
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+app.get("/login", (req, res) => {
+  var templateVars = {
+    username: req.cookies["username"]
+  };
+  res.render("login", templateVars);
+});
+
+// 🍪 Stuff 🍪
+app.get('/', function(req, res) { });
+
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase };
+  var templateVars = {
+    urls: urlDatabase,
+    username: req.cookies["username"]
+  };
   res.render("urls_index", templateVars);
 });
 
@@ -62,8 +82,6 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-
-
 // Registration Page:
 app.get("/register", (req, res) => {
     urlDatabase[req.params.id] = req.body.longURL;
@@ -72,13 +90,23 @@ app.get("/register", (req, res) => {
 });
 
 
-// Last Uncommented
-// ⬇ outputs request params to terminal
-app.post("/urls", (req, res) => {
-  console.log(req.body);  // debug statement to see POST parameters
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+
+// POST REQUESTS
+
+app.post("/login", (req, res) => {
+  res.cookie(["username"], req.body["username"]);
+  res.redirect("login");
 });
 
+app.post("/logout", (req, res) => {
+  res.clearCookie("username");
+  res.redirect("urls")
+});
+
+// ⬇ outputs request params to terminal
+app.post("/urls", (req, res) => {
+  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+});
 
 // Adding the delete function
 app.post("/urls/:id/delete", (req, res) => {
@@ -87,7 +115,6 @@ app.post("/urls/:id/delete", (req, res) => {
   res.render("urls_index", {urls: urlDatabase});
 });
 
-// Last Uncommented
 // Updating a post:
 app.post("/urls/:id", (req, res) => {
   urlDatabase[req.params.id] = req.body.longURL;
@@ -99,10 +126,29 @@ app.post("/urls/:id", (req, res) => {
 
 
 
+// Posting to the Register:
 app.post("/register", (req, res) => {
-    urlDatabase[req.params.id] = req.body.longURL;
+  let newUser = {};
+  users.newUser;// Add new object in global users
+  console.log('users.newUser: ', users.newUser);
+  newUser.id = generateRandomString();
+  console.log('newUser.id: ', newUser.id);
+  res.cookie("user_id", users.newUser);
+  // Is newUser getting added to my user object? (Must pass other error to find out)
+
   // Make it so you're retrieving info here from reg page
-  res.render("urls_index", {urls: urlDatabase});
+  res.render("urls_index", users);
+  console.log(users);
+  console.log('{id: req.cookies.id, email: req.cookies.email, password: req.cookies.pd}: ', {id: req.cookies.id, email: req.cookies.email, password: req.cookies.pd});
+
+  // Task 5: Handle Registration Errors:
+  if(!email || !password){
+    res.sendStatus(400);
+  } else {                       // ⬇ is that the right object reference?
+    // const foundUser = users.find((user.id) => {
+    //   return users.email === email && users.password === password;
+    // });
+  }
 });
 
 
@@ -110,18 +156,3 @@ app.post("/register", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
