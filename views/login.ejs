@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>TinyApp</title>
+  </head>
+  <body>
+    <% include partials/_header %>
+    <h1>Welcome to BlahErrors Registration!</h1>
+        <% if (username) { %>
+        <form action="/logout" method="POST" style="margin:150px;">
+          <%= username %>
+          <p><button type="logout">Logout</button></p>
+        </form>
+        <% } else { %>
+      <form action="/login" method="POST" style="margin:150px;">
+        <p>
+          <input name="username">
+          <button type="submit">Login</button>
+        </p>
+    </form>
+    <% } %>
+  </body>
+</html>
